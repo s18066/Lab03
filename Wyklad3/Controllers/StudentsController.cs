@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Wyklad3.DAL;
 using Wyklad3.Models;
@@ -17,32 +18,41 @@ namespace Wyklad3.Controllers
             _dbService = service;
         }
 
-        //2. QueryString
         [HttpGet]
-        public IActionResult GetStudents([FromServices]IDbService service, [FromQuery]string orderBy)
+        public async Task<IActionResult> GetStudents([FromQuery]string orderBy)
         {
             if (orderBy == "lastname")
             {
-                return Ok(_dbService.GetStudents().OrderBy(s => s.LastName));
+                return Ok((await _dbService.GetStudents()).OrderBy(s => s.LastName));
             }
 
-            return Ok(_dbService.GetStudents());
+            return Ok(await _dbService.GetStudents());
         }
-
-        //[FromRoute], [FromBody], [FromQuery]
-        //1. URL segment
+        
         [HttpGet("{id}")]
-        public IActionResult GetStudent([FromRoute]int id) //action method
+        public async Task<IActionResult> GetStudent([FromRoute]string id)
         {
-            if (id == 1)
+            var foundStudent = await _dbService.GetStudent(id);
+            if (foundStudent is null)
             {
-                return Ok("Jan");
+                return NotFound("Student was not found");
             }
 
-            return NotFound("Student was not found");
+            return Ok(foundStudent);
+        }
+        
+        [HttpGet("{id}/enrollments")]
+        public async Task<IActionResult> GetStudentEnrolments([FromRoute]string id)
+        {
+            var foundEnrollments = await _dbService.GetStudentEnrollments(id);
+            if (foundEnrollments is null)
+            {
+                return NotFound("Student was not found");
+            }
+
+            return Ok(foundEnrollments);
         }
 
-        //3. Body - cialo zadan
         [HttpPost]
         public IActionResult CreateStudent([FromBody]Student student)
         {
@@ -51,13 +61,13 @@ namespace Wyklad3.Controllers
             return Ok(student); //JSON
         }
 
-        [HttpPut("{id:int")]
+        [HttpPut("{id:int}")]
         public IActionResult UpdateStudent(int studentId)
         {
             return Ok("Aktualizacja dokończona");
         }
 
-        [HttpDelete("{id:intd}")]
+        [HttpDelete("{id:int}")]
         public IActionResult DeleteStudent(int studentId)
         {
             return Ok("Usuwanie dokończone");

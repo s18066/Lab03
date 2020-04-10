@@ -24,7 +24,7 @@ namespace Wyklad3
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddTransient<IDbService, MockDbService>();
+            services.AddTransient<IDbService, DbService>(provider => new DbService(Configuration["SqlConnectionString"]));
             services.AddControllers();
         }
 
